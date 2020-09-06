@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/django_graphql_movies.iml" filepath="$PROJECT_DIR$/.idea/django_graphql_movies.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/django_graphql_openEHR.iml" filepath="$PROJECT_DIR$/.idea/django_graphql_openEHR.iml" />
     </modules>
   </component>
 </project>

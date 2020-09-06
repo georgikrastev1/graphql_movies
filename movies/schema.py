@@ -1,6 +1,25 @@
+from collections import namedtuple
+import json
 import graphene
-from graphene_django.types import DjangoObjectType, ObjectType
+import requests
+from graphene_django.types import DjangoObjectType
+from graphene import ObjectType, String, Boolean, ID, Field, Int
+
 from movies.models import Actor, Movie
+
+def _json_object_hook(d):
+    return namedtuple('X', d.keys())(*d.values())
+
+def json2obj(data):
+    return json.loads(data, object_hook=_json_object_hook)
+
+class Weather(ObjectType):
+    weather= String()
+    visibility=Int()
+
+
+class Assessmentd(ObjectType):
+    compositionUid = String()
 
 # Create a GraphQL type for the actor model
 class ActorType(DjangoObjectType):
@@ -19,6 +38,8 @@ class Query(ObjectType):
     movie = graphene.Field(MovieType, id=graphene.Int())
     actors=graphene.List(ActorType)
     movies = graphene.List(MovieType)
+    city = graphene.Field(Weather)
+    ehrAssessment = graphene.Field(Assessmentd)
 
     def resolve_actor(self, info, **kwargs):
         id = kwargs.get('id')
@@ -41,6 +62,38 @@ class Query(ObjectType):
 
     def resolve_movies(self, info, **kwargs):
         return Movie.objects.all()
+
+    def resolve_city(self,info,**kwargs):
+        url = 'http://api.openweathermap.org/data/2.5/weather?q={}&units=metric&APPID=d7f3c8d25586e840fb2703b4858f4c59'
+        city = "Sofia"
+        r = requests.get(url.format(city)).json()
+        print(r)
+        z=json2obj(json.dumps(r))
+        print(z[0])
+        return z
+    def resolve_ehrAssessmentd(self, info, **kwargs):
+        url_read = 'https://cdr.code4health.org/rest/v1/composition/16c621db-179a-4803-9c60-8bab41e84b86::f3240965-15b7-4333-a0aa-9daa131dea16::1?format=FLAT&nhsNumber=99999990003'
+
+        headers = {
+            'Content-Type': "application/json",
+            'Ehr-Session-disabled': "{{Ehr-Session}}",
+            'Authorization': "Basic ZjMyNDA5NjUtMTViNy00MzMzLWEwYWEtOWRhYTEzMWRlYTE2OiQyYSQxMCQ2MTlraQ==",
+            'User-Agent': "PostmanRuntime/7.15.2",
+            'Accept': "*/*",
+            'Cache-Control': "no-cache",
+            'Postman-Token': "6cb4fa05-51e2-4028-af31-d99de241afea,85aae0a2-f395-4c9d-b08b-3e77c547bfc4",
+            'Host': "cdr.code4health.org",
+            'Accept-Encoding': "gzip, deflate",
+            'Connection': "keep-alive",
+            'cache-control': "no-cache"
+        }
+
+        r = requests.get(url_read, headers=headers).json()
+        print(r["compositionUid"])
+
+        return r
+
+
 
 # Create Input Object Types
 class ActorInput(graphene.InputObjectType):
